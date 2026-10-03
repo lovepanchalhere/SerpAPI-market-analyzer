@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Market Analyzer</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0f1117;
+      --surface:   #1a1d27;
+      --border:    #2a2d3a;
+      --accent:    #6c63ff;
+      --accent-lt: #8b85ff;
+      --text:      #e8e9f0;
+      --muted:     #9294a8;
+      --green:     #22c55e;
+      --amber:     #f59e0b;
+      --red:       #ef4444;
+      --radius:    12px;
+    }
+
+    body {
+      font-family: "Inter", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 48px 16px;
+    }
+
+    /* ---------- Header ---------- */
+    header { text-align: center; margin-bottom: 40px; }
+    header h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      background: linear-gradient(135deg, #fff 30%, var(--accent-lt));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    header p { color: var(--muted); margin-top: 8px; font-size: 0.95rem; }
+
+    /* ---------- Card ---------- */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px;
+      width: 100%;
+      max-width: 560px;
+    }
+
+    /* ---------- Form ---------- */
+    .form-group { margin-bottom: 18px; }
+    label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: var(--muted);
+      margin-bottom: 7px;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+    }
+    input {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 11px 14px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    input:focus { border-color: var(--accent); }
+    input::placeholder { color: var(--muted); }
+
+    button {
+      width: 100%;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 12px;
+      font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 6px;
+      transition: background 0.2s, opacity 0.2s;
+    }
+    button:hover:not(:disabled) { background: var(--accent-lt); }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* ---------- Loader ---------- */
+    #loader {
+      display: none;
+      text-align: center;
+      margin-top: 28px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+    .spinner {
+      width: 28px; height: 28px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin: 0 auto 10px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ---------- Error ---------- */
+    #error-box {
+      display: none;
+      background: rgba(239,68,68,0.1);
+      border: 1px solid rgba(239,68,68,0.35);
+      border-radius: 8px;
+      padding: 12px 16px;
+      color: #fca5a5;
+      font-size: 0.88rem;
+      margin-top: 20px;
+    }
+
+    /* ---------- Results ---------- */
+    #results { display: none; margin-top: 32px; width: 100%; max-width: 560px; }
+
+    .section-title {
+      font-size: 0.78rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+
+    /* Verdict pills */
+    .verdicts {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .verdict-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 16px;
+      text-align: center;
+    }
+    .verdict-card .v-label {
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin-bottom: 8px;
+    }
+    .verdict-card .v-value {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+    .tag {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-top: 6px;
+    }
+    .tag-green  { background: rgba(34,197,94,0.12);  color: var(--green); }
+    .tag-amber  { background: rgba(245,158,11,0.12); color: var(--amber); }
+    .tag-red    { background: rgba(239,68,68,0.12);  color: var(--red);   }
+    .tag-purple { background: rgba(108,99,255,0.12); color: var(--accent-lt); }
+
+    /* Competitor list */
+    .competitors-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .comp-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .comp-header span { font-size: 0.82rem; color: var(--muted); }
+    .comp-count {
+      background: rgba(108,99,255,0.15);
+      color: var(--accent-lt);
+      padding: 2px 10px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+    .comp-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s;
+    }
+    .comp-item:last-child { border-bottom: none; }
+    .comp-item:hover { background: rgba(255,255,255,0.03); }
+    .comp-name { font-size: 0.93rem; font-weight: 500; }
+    .comp-meta { font-size: 0.8rem; color: var(--muted); margin-top: 2px; }
+    .comp-rating {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-weight: 600;
+      font-size: 0.93rem;
+      color: var(--amber);
+    }
+    .star-svg { width: 14px; height: 14px; color: var(--amber); flex-shrink: 0; }
+    .no-rating { color: var(--muted); font-size: 0.8rem; }
+
+    .empty-state {
+      padding: 32px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    /* Warning box for partial API failures */
+    #warning-box {
+      display: none;
+      background: rgba(245,158,11,0.08);
+      border: 1px solid rgba(245,158,11,0.3);
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-top: 16px;
+      font-size: 0.83rem;
+      color: #fcd34d;
+    }
+    #warning-box ul { margin: 6px 0 0 16px; }
+    #warning-box li { margin-bottom: 3px; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Market Analyzer</h1>
+    <p>Discover competition levels and search trends for any business in India</p>
+  </header>
+
+  <!-- Form card -->
+  <div class="card">
+    <div class="form-group">
+      <label for="business-type">Business Type</label>
+      <input id="business-type" type="text" placeholder="e.g. Coffee shops, Gyms, Pharmacies" />
+    </div>
+    <div class="form-group">
+      <label for="location">Location</label>
+      <input id="location" type="text" placeholder="e.g. Mumbai, Bangalore, Delhi" />
+    </div>
+    <button id="analyze-btn" onclick="runAnalysis()">Analyze Market</button>
+
+    <div id="loader">
+      <div class="spinner"></div>
+      Fetching market data...
+    </div>
+    <div id="error-box"></div>
+  </div>
+
+  <!-- Results -->
+  <div id="results">
+    <div id="warning-box"></div>
+
+    <!-- Verdicts -->
+    <p class="section-title" style="margin-top:28px;">Analysis Verdicts</p>
+    <div class="verdicts">
+      <div class="verdict-card">
+        <div class="v-label">Competition</div>
+        <div class="v-value" id="v-competition">-</div>
+        <div id="v-competition-tag"></div>
+      </div>
+      <div class="verdict-card">
+        <div class="v-label">Search Trend</div>
+        <div class="v-value" id="v-trend">-</div>
+        <div id="v-trend-tag"></div>
+      </div>
+    </div>
+
+    <!-- Competitors -->
+    <p class="section-title">Competitors Found</p>
+    <div class="competitors-card">
+      <div class="comp-header">
+        <span>Local businesses</span>
+        <span class="comp-count" id="comp-count">0</span>
+      </div>
+      <div id="comp-list"></div>
+    </div>
+
+  </div>
+
+  <script>
+    const API_URL = "http://localhost:5000/analyze";
+
+    function competitionTag(verdict) {
+      if (!verdict) return { cls: "tag-amber", text: "Moderate" };
+      const v = verdict.toLowerCase();
+      if (v.includes("high"))
+        return { cls: "tag-red",   text: "High" };
+      if (v.includes("low"))
+        return { cls: "tag-green", text: "Opportunity" };
+      return { cls: "tag-amber", text: "Moderate" };
+    }
+
+    function trendTag(verdict) {
+      if (!verdict) return { cls: "tag-purple", text: "Stable" };
+      const v = verdict.toLowerCase();
+      if (v === "rising")
+        return { cls: "tag-green",  text: "\u2197 Rising" };
+      if (v === "declining")
+        return { cls: "tag-red",    text: "\u2198 Declining" };
+      return { cls: "tag-purple", text: "\u2192 Stable" };
+    }
+
+    function showError(msg) {
+      const box = document.getElementById("error-box");
+      box.textContent = msg;
+      box.style.display = "block";
+    }
+
+    function clearError() {
+      const box = document.getElementById("error-box");
+      box.style.display = "none";
+      box.textContent = "";
+    }
+
+    function showNoResults(businessType, location) {
+      showError('No results found for "' + businessType + '" in "' + location + '". Try a different business type or location.');
+    }
+
+    async function runAnalysis() {
+      const businessType = document.getElementById("business-type").value.trim();
+      const location     = document.getElementById("location").value.trim();
+
+      clearError();
+      document.getElementById("results").style.display = "none";
+
+      if (!businessType || !location) {
+        showError("Please fill in both Business Type and Location.");
+        return;
+      }
+
+      const btn    = document.getElementById("analyze-btn");
+      const loader = document.getElementById("loader");
+      btn.disabled        = true;
+      loader.style.display = "block";
+
+      try {
+        const resp = await fetch(API_URL, {
+          method:  "POST",
+          headers: { "Content-Type": "application/json" },
+          body:    JSON.stringify({ business_type: businessType, location: location }),
+        });
+
+        const data = await resp.json();
+
+        if (resp.status === 404) {
+          showNoResults(businessType, location);
+          return;
+        }
+
+        if (!resp.ok) {
+          showError(data.error || "Something went wrong.");
+          return;
+        }
+
+        renderResults(data);
+
+      } catch (err) {
+        showError("Could not reach the backend. Make sure the Flask server is running on port 5000.");
+      } finally {
+        btn.disabled         = false;
+        loader.style.display = "none";
+      }
+    }
+
+    function renderResults(data) {
+      const verdicts  = data.verdicts || {};
+      const localData = (data.local_results || {}).data || [];
+
+      // Show any per-API warnings (partial failures)
+      const warnBox = document.getElementById("warning-box");
+      if (data.warnings && Object.keys(data.warnings).length > 0) {
+        const items = Object.entries(data.warnings)
+          .map(([k, v]) => "<li><strong>" + escHtml(k) + ":</strong> " + escHtml(v) + "</li>")
+          .join("");
+        warnBox.innerHTML = "&#9888; Some data sources had issues:<ul>" + items + "</ul>";
+        warnBox.style.display = "block";
+      } else {
+        warnBox.style.display = "none";
+      }
+
+      // --- Competition verdict ---
+      if (verdicts.competition == null) {
+        document.getElementById("v-competition").innerHTML =
+          '<span style="font-size:0.8rem;font-weight:400;color:var(--muted);line-height:1.5;">Could not determine.<br>Try a more specific location,<br>e.g. <em>&quot;Mumbai, Maharashtra&quot;</em>.</span>';
+        document.getElementById("v-competition-tag").innerHTML = "";
+      } else {
+        const compTag = competitionTag(verdicts.competition);
+        document.getElementById("v-competition").textContent = verdicts.competition;
+        document.getElementById("v-competition-tag").innerHTML =
+          '<span class="tag ' + compTag.cls + '">' + compTag.text + '</span>';
+      }
+
+      // --- Trend verdict ---
+      if (verdicts.trend == null) {
+        document.getElementById("v-trend").innerHTML =
+          '<span style="font-size:0.8rem;font-weight:400;color:var(--muted);">Trend data unavailable.</span>';
+        document.getElementById("v-trend-tag").innerHTML = "";
+      } else {
+        const tTag = trendTag(verdicts.trend);
+        document.getElementById("v-trend").textContent = verdicts.trend;
+        document.getElementById("v-trend-tag").innerHTML =
+          '<span class="tag ' + tTag.cls + '">' + tTag.text + '</span>';
+      }
+
+      // --- Competitor list ---
+      document.getElementById("comp-count").textContent = localData.length;
+      const list = document.getElementById("comp-list");
+
+      if (localData.length === 0) {
+        list.innerHTML = '<div class="empty-state">No competitors found for this query.</div>';
+      } else {
+        list.innerHTML = localData.map((biz, i) => {
+          const name    = biz.title   || "Unknown";
+          const rating  = biz.rating  != null ? biz.rating  : null;
+          const reviews = biz.reviews != null ? biz.reviews : null;
+
+          const ratingHtml = rating != null
+            ? '<div class="comp-rating"><svg class="star-svg" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M10 1l2.39 5.26L18 7.27l-4 3.93.94 5.52L10 14.1l-4.94 2.62.94-5.52L2 7.27l5.61-.01L10 1z"/></svg>' + rating + '</div>'
+            : '<div class="no-rating">No rating</div>';
+
+          const reviewsText = reviews != null ? Number(reviews).toLocaleString() + ' reviews' : '';
+
+          return '<div class="comp-item">' +
+            '<div>' +
+              '<div class="comp-name">' + (i + 1) + '. ' + escHtml(name) + '</div>' +
+              (reviewsText ? '<div class="comp-meta">' + reviewsText + '</div>' : '') +
+            '</div>' +
+            ratingHtml +
+          '</div>';
+        }).join("");
+      }
+
+      document.getElementById("results").style.display = "block";
+      document.getElementById("results").scrollIntoView({ behavior: "smooth" });
+    }
+
+    function escHtml(str) {
+      return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+
+    // Allow Enter key to submit
+    document.addEventListener("keydown", e => {
+      if (e.key === "Enter") runAnalysis();
+    });
+  </script>
+</body>
+</html>
