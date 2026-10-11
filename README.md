@@ -64,8 +64,7 @@ not decorative, to the product.
 3. Create a `.env` file in the project root with your own SerpApi key:SERPAPI_KEY=1ab3348bc0b9f0a83da761890ebab5a6b7ef958baef22a7e51bf98ed4db6b5314
 4. Start the backend server:python app.py
 #
-5. Open `index.html` in your browser. It will automatically connect to the 
-   backend running at `localhost:5000`.
+5. Open http://localhost:5000 in your browser.
 
 6. Enter a business type and location (including the state, e.g., "Karnal, 
    Haryana", for best results) and click "Analyze Market."
@@ -79,6 +78,8 @@ testing by the developer.
 ## Track
 
 Commerce & Market Intelligence
+
+##Live demo: https://serp-api-market-analyzer.vercel.app
 
 ## Team
 
