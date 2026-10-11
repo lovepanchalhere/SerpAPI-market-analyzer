@@ -304,7 +304,7 @@
   </div>
 
   <script>
-    const API_URL = "http://localhost:5000/analyze";
+    const API_URL = "/analyze";
 
     function competitionTag(verdict) {
       if (!verdict) return { cls: "tag-amber", text: "Moderate" };
@@ -381,7 +381,7 @@
         renderResults(data);
 
       } catch (err) {
-        showError("Could not reach the backend. Make sure the Flask server is running on port 5000.");
+        showError("Could not reach the backend. If running locally, make sure the Flask server is running.");
       } finally {
         btn.disabled         = false;
         loader.style.display = "none";

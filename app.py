@@ -1,11 +1,11 @@
 import os
 import requests
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(override=False)  # no-op if .env is absent; never crashes
 
 app = Flask(__name__)
 CORS(app)
@@ -272,6 +272,15 @@ def handle_unexpected_error(e):
 
 
 # ---------------------------------------------------------------------------
+# GET / — serve the frontend
+# ---------------------------------------------------------------------------
+@app.route("/", methods=["GET"])
+def index():
+    """Serve the single-page frontend so Flask and the UI share one domain."""
+    return send_from_directory(".", "index.html")
+
+
+# ---------------------------------------------------------------------------
 # GET /health
 # ---------------------------------------------------------------------------
 @app.route("/health", methods=["GET"])
@@ -281,4 +290,4 @@ def health():
 
 
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=5000)
+    app.run(debug=False, host="0.0.0.0", port=5000)
